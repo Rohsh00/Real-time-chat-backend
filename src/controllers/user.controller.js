@@ -45,6 +45,35 @@ const userLogin = async (req, res) => {
   }
 };
 
+const userSignup = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    const exists = await User.findOne({
+      username: username.toLowerCase(),
+    });
+
+    if (exists) {
+      return res.status(409).json({ message: "Username already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await User.create({
+      username: username.toLowerCase(),
+      password: hashedPassword,
+    });
+
+    res.status(201).json({ message: "Signup successful" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 const findUsersByUsername = async (req, res) => {
   try {
     const { username } = req.query;
@@ -71,4 +100,4 @@ const findUsersByUsername = async (req, res) => {
   }
 };
 
-module.exports = { userLogin, findUsersByUsername };
+module.exports = { userLogin, findUsersByUsername, userSignup };
