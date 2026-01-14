@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat with userName</title>
+  </head>
+  <body>
+    <h2>Chat App</h2>
+
+    <div>
+      <input id="userName" placeholder="Enter userName" />
+      <button onclick="joinChat()">Join Chat</button>
+    </div>
+
+    <hr />
+
+    <div id="messages"></div>
+
+    <input id="msg" placeholder="Type message..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const messagesDiv = document.getElementById("messages");
+
+      async function loadMessages() {
+        const res = await fetch("/api/messages/getChatHistory");
+        const messages = await res.json();
+
+        messages.forEach((msg) => {
+          const div = document.createElement("div");
+          div.textContent = `${msg.userName}: ${msg.message}`;
+          messagesDiv.appendChild(div);
+        });
+      }
+
+      loadMessages();
+
+      function joinChat() {
+        const userName = document.getElementById("userName").value;
+        socket.emit("join", userName);
+      }
+
+      function sendMessage() {
+        const input = document.getElementById("msg");
+        socket.emit("sendMessage", input.value);
+        input.value = "";
+      }
+
+      socket.on("receiveMessage", (data) => {
+        const div = document.createElement("div");
+        div.textContent = `${data.userName}: ${data.message}`;
+        messagesDiv.appendChild(div);
+      });
+    </script>
+  </body>
+</html>
