@@ -30,7 +30,6 @@ const createUsers = async () => {
     });
   }
 
-  console.log("Users created");
   process.exit();
 };
 
