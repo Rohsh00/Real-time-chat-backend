@@ -1,5 +1,7 @@
 const Message = require("../models/messages.model");
 const ChatList = require("../models/chatlist.model");
+const webpush = require("../config/webpush");
+const PushSub = require("../models/pushSubscription.model");
 
 const onlineUsers = new Map();
 
@@ -77,6 +79,21 @@ const chatSocket = (io, socket) => {
       io.to(chatId).emit("receivePrivateMessage", msgData);
 
       await Message.create(msgData);
+
+      if (!onlineUsers.has(receiverId)) {
+        const userSub = await PushSub.findOne({ userId: receiverId });
+
+        if (userSub) {
+          await webpush.sendNotification(
+            userSub.subscription,
+            JSON.stringify({
+              title: `New message from ${socket.username}`,
+              body: message || "📎 Attachment",
+              url: `/chat/${chatId}`,
+            })
+          );
+        }
+      }
     }
   );
 

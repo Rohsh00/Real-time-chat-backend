@@ -11,6 +11,8 @@ const uploadRoutes = require("./src/routes/upload.routes");
 const messageRoutes = require("./src/routes/message.routes");
 const userRoutes = require("./src/routes/user.routes");
 const chatListRoutes = require("./src/routes/chatlist.routes");
+const pushSubscription = require("./src/routes/pushSubscription.routes");
+const testPushRoutes = require("./src/routes/testpush.routes");
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +33,8 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/chatUploads", uploadRoutes);
 app.use("/api/auth", userRoutes);
 app.use("/api/chatList", chatListRoutes);
+app.use("/api/save-subscription", pushSubscription);
+app.use("/api/test-push", testPushRoutes);
 
 app.get("/health", (req, res) => {
   res.json({ status: "OK", server: "running" });
