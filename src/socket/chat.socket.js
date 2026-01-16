@@ -1,13 +1,20 @@
 const Message = require("../models/messages.model");
 const ChatList = require("../models/chatlist.model");
 
+const onlineUsers = new Map();
+
 const chatSocket = (io, socket) => {
   console.log("User connected:", socket.id);
 
   socket.on("setUser", ({ userId, username }) => {
     socket.userId = userId;
     socket.username = username;
+
+    onlineUsers.set(userId, socket.id);
+
     console.log(`${username} connected`);
+
+    io.emit("online-users", Array.from(onlineUsers.keys()));
   });
 
   socket.on("joinRoom", ({ chatId }) => {
@@ -25,14 +32,12 @@ const chatSocket = (io, socket) => {
   });
 
   socket.on("stopTyping", ({ chatId, senderId, username }) => {
-    socket
-      .to(chatId)
-      .emit("receiveTypingState", {
-        chatId,
-        senderId,
-        isTyping: false,
-        username,
-      });
+    socket.to(chatId).emit("receiveTypingState", {
+      chatId,
+      senderId,
+      isTyping: false,
+      username,
+    });
   });
 
   socket.on("sendMessage", async (data) => {
@@ -76,7 +81,10 @@ const chatSocket = (io, socket) => {
   );
 
   socket.on("disconnect", () => {
-    console.log(`${socket.username} disconnected`);
+    if (socket.userId) {
+      onlineUsers.delete(socket.userId);
+      io.emit("online-users", Array.from(onlineUsers.keys()));
+    }
   });
 };
 
