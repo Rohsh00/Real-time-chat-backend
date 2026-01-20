@@ -43,6 +43,7 @@ const chatSocket = (io, socket) => {
   });
 
   socket.on("sendMessage", async (data) => {
+    const { receiverId, chatId, senderId, username, message, type } = data;
     const msg = await Message.create(data);
 
     await ChatList.findByIdAndUpdate(data.chatId, {
@@ -50,52 +51,23 @@ const chatSocket = (io, socket) => {
     });
 
     io.to(data.chatId).emit("receiveMessage", msg);
-  });
 
-  socket.on(
-    "sendPrivateMessage",
-    async ({
-      chatId,
-      senderId,
-      receiverId,
-      type = "text",
-      message,
-      fileUrl,
-      fileName,
-      fileSize,
-    }) => {
-      const msgData = {
-        chatId,
-        senderId,
-        receiverId,
-        username: socket.username,
-        type,
-        message,
-        fileUrl,
-        fileName,
-        fileSize,
-      };
-
-      io.to(chatId).emit("receivePrivateMessage", msgData);
-
-      await Message.create(msgData);
-
-      if (!onlineUsers.has(receiverId)) {
-        const userSub = await PushSub.findOne({ userId: receiverId });
-
-        if (userSub) {
-          await webpush.sendNotification(
-            userSub.subscription,
-            JSON.stringify({
-              title: `New message from ${socket.username}`,
-              body: message || "📎 Attachment",
-              url: `/chat/${chatId}`,
-            })
-          );
-        }
-      }
+    // if (onlineUsers.has(receiverId)) {
+    const userSub = await PushSub.findOne({ userId: receiverId });
+    console.log({ userSub });
+    if (userSub) {
+      console.log({ userSub });
+      await webpush.sendNotification(
+        userSub.subscription,
+        JSON.stringify({
+          title: `New message from ${socket.username}`,
+          body: message || "📎 Attachment",
+          url: `/chat/${chatId}`,
+        })
+      );
+      // }
     }
-  );
+  });
 
   socket.on("disconnect", () => {
     if (socket.userId) {

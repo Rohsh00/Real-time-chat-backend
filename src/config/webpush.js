@@ -3,7 +3,7 @@ require("dotenv").config();
 const webpush = require("web-push");
 
 webpush.setVapidDetails(
-  "mailto:admin@yourapp.com",
+  "mailto:rohit.sharma@yopmail.com",
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );

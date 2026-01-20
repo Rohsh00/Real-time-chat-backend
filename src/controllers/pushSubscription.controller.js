@@ -2,6 +2,7 @@ const PushSub = require("../models/pushSubscription.model");
 
 const pushSubscription = async (req, res) => {
   try {
+    console.log(req.body);
     const { userId, subscription } = req.body;
 
     if (!userId || !subscription) {
