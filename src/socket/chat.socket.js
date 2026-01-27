@@ -62,8 +62,8 @@ const chatSocket = (io, socket) => {
         JSON.stringify({
           title: `New message from ${socket.username}`,
           body: message || "📎 Attachment",
-          url: `/chat?chatid=${chatId}`,
-        })
+          url: `/chat/${chatId}`,
+        }),
       );
       // }
     }
