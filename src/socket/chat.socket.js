@@ -44,7 +44,10 @@ const chatSocket = (io, socket) => {
 
   socket.on("sendMessage", async (data) => {
     const { receiverId, chatId, senderId, username, message, type } = data;
-    const msg = await Message.create(data);
+    const msg = await Message.create({
+      ...data,
+      status: "sent",
+    });
 
     await ChatList.findByIdAndUpdate(data.chatId, {
       lastMessage: data.message,
@@ -52,11 +55,8 @@ const chatSocket = (io, socket) => {
 
     io.to(data.chatId).emit("receiveMessage", msg);
 
-    // if (onlineUsers.has(receiverId)) {
     const userSub = await PushSub.findOne({ userId: receiverId });
-    console.log({ userSub });
     if (userSub) {
-      console.log({ userSub });
       await webpush.sendNotification(
         userSub.subscription,
         JSON.stringify({
@@ -65,8 +65,27 @@ const chatSocket = (io, socket) => {
           url: `/chat/${chatId}`,
         }),
       );
-      // }
     }
+  });
+
+  socket.on("messageDelivered", async ({ messageId }) => {
+    await Message.findByIdAndUpdate(messageId, {
+      status: "delivered",
+      deliveredAt: new Date(),
+    });
+
+    const msg = await Message.findById(messageId);
+    io.to(msg.chatId).emit("messageStatusUpdate", msg);
+  });
+
+  socket.on("messageSeen", async ({ chatId, userId }) => {
+    await Message.updateMany(
+      { chatId, receiverId: userId, status: "delivered" },
+      { status: "seen", seenAt: new Date() },
+    );
+
+    const updated = await Message.find({ chatId });
+    io.to(chatId).emit("bulkSeenUpdate", updated);
   });
 
   socket.on("disconnect", () => {

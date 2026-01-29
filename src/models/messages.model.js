@@ -39,11 +39,19 @@ const messageSchema = new mongoose.Schema(
       },
     },
 
+    status: {
+      type: String,
+      enum: ["sent", "delivered", "seen"],
+      default: "sent",
+    },
+
+    deliveredAt: Date,
+    seenAt: Date,
     fileUrl: String,
     fileName: String,
     fileSize: Number,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Message", messageSchema);
